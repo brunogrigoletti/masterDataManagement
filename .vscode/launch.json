@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-DemApplication<dem>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "mdm.engsoft2.dem.DemApplication",
+            "projectName": "dem",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
