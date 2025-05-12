@@ -27,7 +27,8 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>24</java.version>
+		<java.version>21</java.version>
+		<maven.compiler.proc>full</maven.compiler.proc>
 	</properties>
 	<dependencies>
 
@@ -59,6 +60,7 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
+			<version>1.18.38</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -78,6 +80,7 @@
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
+							<version>1.18.38</version>
 						</path>
 					</annotationProcessorPaths>
 				</configuration>

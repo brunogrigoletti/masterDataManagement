@@ -1,4 +1,4 @@
-FROM openjdk:latest
+FROM openjdk:24-jdk-slim
 WORKDIR /mdm
 COPY ./target/mdm-0.0.1-SNAPSHOT.jar .
 CMD ["java", "-jar", "mdm-0.0.1-SNAPSHOT.jar"]
