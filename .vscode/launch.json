@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "MdmApplication",
+            "request": "launch",
+            "mainClass": "mdm.engsoft2.mdm.MdmApplication",
+            "projectName": "mdm"
+        },
+        {
+            "type": "java",
             "name": "Spring Boot-DemApplication<dem>",
             "request": "launch",
             "cwd": "${workspaceFolder}",

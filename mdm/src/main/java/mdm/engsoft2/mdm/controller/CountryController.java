@@ -3,16 +3,15 @@ package mdm.engsoft2.mdm.controller;
 import mdm.engsoft2.mdm.entity.CountryEntity;
 import mdm.engsoft2.mdm.repository.CountryRepository;
 import mdm.engsoft2.mdm.service.CountryService;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/countries")
 public class CountryController {
+
     private final CountryService service;
     private final CountryRepository repository;
 

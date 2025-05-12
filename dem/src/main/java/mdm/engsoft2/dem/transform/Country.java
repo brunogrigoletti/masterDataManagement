@@ -1,29 +1,26 @@
-package mdm.engsoft2.dem.transform; 
-
-import java.util.List;
-import java.util.Map;
+package mdm.engsoft2.dem.transform;
 
 public class Country {
-    private Map<String, Object> name;
+    // Captura apenas o campo "common name"
+    private String commonName;
     private Boolean independent;
     private Boolean unMember;
-    private Map<String, Map<String, Object>> currencies;
-    private List<String> capital;
+    private String currencies;
+    private String capital;
     private String region;
-    private Map<String, String> languages;
-    private List<Double> latlng;
-    private List<String> borders;
+    private String languages;
+    private String latlng;
+    private String borders;
     private Double area;
     private Long population;
-    private Map<String, Double> gini;
-    private List<String> timezones;
-    private List<String> continents;
+    private String gini;
+    private String timezones;
+    private String continents;
 
-    public Country(Map<String, Object> name, Boolean independent, Boolean unMember,
-            Map<String, Map<String, Object>> currencies, List<String> capital, String region,
-            Map<String, String> languages, List<Double> latlng, List<String> borders, Double area, Long population,
-            Map<String, Double> gini, List<String> timezones, List<String> continents) {
-        this.name = name;
+    public Country(String commonName, Boolean independent, Boolean unMember, String currencies, String capital,
+                   String region, String languages, String latlng, String borders, Double area, Long population,
+                   String gini, String timezones, String continents) {
+        this.commonName = commonName;
         this.independent = independent;
         this.unMember = unMember;
         this.currencies = currencies;
@@ -39,41 +36,12 @@ public class Country {
         this.continents = continents;
     }
 
-    // Getter for common name
     public String getCommonName() {
-        return name != null ? (String) name.get("common") : null;
+        return commonName;
     }
 
-    // Setter for common name
     public void setCommonName(String commonName) {
-        if (name != null) {
-            name.put("common", commonName);
-        }
-    }
-
-    // Getter for official name
-    public String getOfficialName() {
-        return name != null ? (String) name.get("official") : null;
-    }
-
-    // Setter for official name
-    public void setOfficialName(String officialName) {
-        if (name != null) {
-            name.put("official", officialName);
-        }
-    }
-
-    // Getter for native name
-    @SuppressWarnings("unchecked")
-    public Map<String, Map<String, String>> getNativeName() {
-        return name != null ? (Map<String, Map<String, String>>) name.get("nativeName") : null;
-    }
-
-    // Setter for native name
-    public void setNativeName(Map<String, Map<String, String>> nativeName) {
-        if (name != null) {
-            name.put("nativeName", nativeName);
-        }
+        this.commonName = commonName;
     }
 
     public Boolean getIndependent() {
@@ -92,19 +60,19 @@ public class Country {
         this.unMember = unMember;
     }
 
-    public Map<String, Map<String, Object>> getCurrencies() {
+    public String getCurrencies() {
         return currencies;
     }
 
-    public void setCurrencies(Map<String, Map<String, Object>> currencies) {
+    public void setCurrencies(String currencies) {
         this.currencies = currencies;
     }
 
-    public List<String> getCapital() {
+    public String getCapital() {
         return capital;
     }
 
-    public void setCapital(List<String> capital) {
+    public void setCapital(String capital) {
         this.capital = capital;
     }
 
@@ -116,27 +84,27 @@ public class Country {
         this.region = region;
     }
 
-    public Map<String, String> getLanguages() {
+    public String getLanguages() {
         return languages;
     }
 
-    public void setLanguages(Map<String, String> languages) {
+    public void setLanguages(String languages) {
         this.languages = languages;
     }
 
-    public List<Double> getLatlng() {
+    public String getLatlng() {
         return latlng;
     }
 
-    public void setLatlng(List<Double> latlng) {
+    public void setLatlng(String latlng) {
         this.latlng = latlng;
     }
 
-    public List<String> getBorders() {
+    public String getBorders() {
         return borders;
     }
 
-    public void setBorders(List<String> borders) {
+    public void setBorders(String borders) {
         this.borders = borders;
     }
 
@@ -156,27 +124,27 @@ public class Country {
         this.population = population;
     }
 
-    public Map<String, Double> getGini() {
+    public String getGini() {
         return gini;
     }
 
-    public void setGini(Map<String, Double> gini) {
+    public void setGini(String gini) {
         this.gini = gini;
     }
 
-    public List<String> getTimezones() {
+    public String getTimezones() {
         return timezones;
     }
 
-    public void setTimezones(List<String> timezones) {
+    public void setTimezones(String timezones) {
         this.timezones = timezones;
     }
 
-    public List<String> getContinents() {
+    public String getContinents() {
         return continents;
     }
 
-    public void setContinents(List<String> continents) {
+    public void setContinents(String continents) {
         this.continents = continents;
     }
-} 
+}

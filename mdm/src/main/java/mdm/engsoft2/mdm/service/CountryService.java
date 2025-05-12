@@ -1,23 +1,35 @@
 package mdm.engsoft2.mdm.service;
 
 import java.util.List;
-
+import java.util.UUID;
 import org.springframework.stereotype.Service;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import jakarta.annotation.PostConstruct;
 import mdm.engsoft2.mdm.repository.CountryRepository;
 import mdm.engsoft2.mdm.entity.CountryEntity;
-import org.springframework.stereotype.Service;
 
 @Service
 public class CountryService {
     private final CountryRepository repository;
-    private final ObjectMapper objectMapper;
+    private final IntegrationService dem;
 
-    public CountryService(CountryRepository repository) {
+    public CountryService(CountryRepository repository, IntegrationService dem) {
         this.repository = repository;
-        this.objectMapper = new ObjectMapper();
+        this.dem = dem;
+    }
+
+    @PostConstruct
+    private void syncWithDem() {
+        System.out.println("Synchronizing countries from DEM service...");
+        List<CountryEntity> countriesFromDem = dem.fetchCountriesFromDem();
+
+        for (CountryEntity country : countriesFromDem) {
+            if (country.getId() == null) {
+                country.setId(UUID.randomUUID().toString());
+            }
+        }
+
+        repository.saveAll(countriesFromDem);
+        System.out.println("Synchronization completed. " + countriesFromDem.size() + " countries saved.");
     }
 
     public CountryEntity create(CountryEntity country) {
@@ -31,7 +43,7 @@ public class CountryService {
 
     public CountryEntity update(String name, CountryEntity countryUpdated){
         validate(countryUpdated);
-        countryUpdated.setCommomName(name);
+        countryUpdated.setCommonName(name);
         return repository.save(countryUpdated);
     }
 
@@ -40,9 +52,10 @@ public class CountryService {
     }
 
     private void validate(CountryEntity country){
-        if (country.getCommomName() == null || country.getCommomName().isBlank()){
+        if (country.getCommonName() == null || country.getCommonName().isBlank()){
             throw new IllegalArgumentException("Common name é obrigatório");
         }
+        
         if (country.getOfficialName() == null || country.getOfficialName().isBlank()){
             throw new IllegalArgumentException("Official name é obrigatório");
         }
