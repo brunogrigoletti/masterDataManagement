@@ -34,6 +34,7 @@ public class CountryService {
 
     public CountryEntity create(CountryEntity country) {
         validate(country);
+        country.setId(UUID.randomUUID().toString());
         return repository.save(country);
     }
 
@@ -41,14 +42,14 @@ public class CountryService {
         return repository.findAll();
     }
 
-    public CountryEntity update(String name, CountryEntity countryUpdated){
+    public CountryEntity update(String id, CountryEntity countryUpdated){
         validate(countryUpdated);
-        countryUpdated.setCommonName(name);
+        countryUpdated.setCommonName(id);
         return repository.save(countryUpdated);
     }
 
-    public void delete(String name) {
-        repository.deleteById(name);
+    public void delete(String id) {
+        repository.deleteById(id);
     }
 
     private void validate(CountryEntity country){

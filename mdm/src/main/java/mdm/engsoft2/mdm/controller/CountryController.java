@@ -31,9 +31,23 @@ public class CountryController {
         return service.getAll();
     }
 
-    @GetMapping("/{name}")
+    @GetMapping("/id/{id}")
+    public ResponseEntity<CountryEntity> getByID(@PathVariable String id) {
+        return repository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/name/{name}")
     public ResponseEntity<CountryEntity> getByName(@PathVariable String name) {
-        return repository.findById(name)
+        return repository.findByCommonName(name)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/capital/{capital}")
+    public ResponseEntity<CountryEntity> getByCapital(@PathVariable String capital) {
+        return repository.findByCapital(capital)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -46,13 +60,13 @@ public class CountryController {
                 .toList();
     }
 
-    @PutMapping("/{name}")
-    public CountryEntity update(@PathVariable String name, @RequestBody CountryEntity country) {
-        return service.update(name, country);
+    @PutMapping("/{id}")
+    public CountryEntity update(@PathVariable String id, @RequestBody CountryEntity country) {
+        return service.update(id, country);
     }
 
-    @DeleteMapping("/{name}")
-    public void delete(@PathVariable String name) {
-        service.delete(name);
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable String id) {
+        service.delete(id);
     }
 }
