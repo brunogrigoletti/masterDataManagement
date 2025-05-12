@@ -1,36 +1,28 @@
-package mdm.engsoft2.dem;
+package mdm.engsoft2.dem.transform;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.ResponseEntity;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import mdm.engsoft2.dem.extract.ExtractService;
 
 @Service
-public class ConsumerService {
+public class TransformService {
 
-    private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final ExtractService data = new ExtractService();
 
-    public ConsumerService() {
-        this.restTemplate = new RestTemplate();
+    public TransformService() {
         this.objectMapper = new ObjectMapper();
-    }
-
-    private String consumeRestCountries() {
-        String url = "https://restcountries.com/v3.1/all";
-        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
-        return response.getBody();
     }
 
     private ArrayList<Country> createCountries() {
         ArrayList<Country> countries = new ArrayList<>();
         try {
-            List<Map<String, Object>> rawList = objectMapper.readValue(consumeRestCountries(),new TypeReference<>(){});
+            List<Map<String, Object>> rawList = objectMapper.readValue(data.getData(),new TypeReference<>(){});
 
             for (Map<String, Object> raw : rawList) {
                 @SuppressWarnings("unchecked")
