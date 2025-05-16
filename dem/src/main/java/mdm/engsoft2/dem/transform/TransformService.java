@@ -42,6 +42,8 @@ public class TransformService {
             });
 
             for (Map<String, Object> raw : rawList) {
+                String countryId = java.util.UUID.randomUUID().toString();
+
                 String commonName = null;
                 if (raw.get("name") != null) {
                     commonName = (String) ((Map<String, Object>) raw.get("name")).get("common");
@@ -51,14 +53,19 @@ public class TransformService {
 
                 Boolean unMember = raw.get("unMember") != null ? (Boolean) raw.get("unMember") : null;
 
-                // Consolida os valores do mapa "currencies" em uma única String
-                String currencies = null;
+                List<Currency> currencies = new ArrayList<>();
                 if (raw.get("currencies") != null) {
-                    currencies = ((Map<String, Map<String, Object>>) raw.get("currencies"))
-                            .entrySet()
-                            .stream()
-                            .map(entry -> entry.getKey() + ": " + entry.getValue().get("name"))
-                            .collect(Collectors.joining(", "));
+                    Map<String, Map<String, Object>> currencyMap = (Map<String, Map<String, Object>>) raw
+                            .get("currencies");
+                    for (Map.Entry<String, Map<String, Object>> entry : currencyMap.entrySet()) {
+                        String code = entry.getKey();
+                        Map<String, Object> details = entry.getValue();
+                        String name = (String) details.get("name");
+                        String symbol = details.get("symbol") != null ? details.get("symbol").toString() : null;
+
+                        Currency currency = new Currency(code, name, symbol, countryId);
+                        currencies.add(currency);
+                    }
                 }
 
                 // Consolida os valores da lista "capital" em uma única String
@@ -119,7 +126,9 @@ public class TransformService {
                         latlng,
                         borders, area, population, gini, timezones, continents);
 
+                c.setId(countryId);
                 countries.add(c);
+                
             }
         } catch (IOException e) {
             e.printStackTrace();

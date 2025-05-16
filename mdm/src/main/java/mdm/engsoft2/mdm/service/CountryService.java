@@ -8,14 +8,15 @@ import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
 import mdm.engsoft2.mdm.repository.CountryRepository;
 import mdm.engsoft2.mdm.entity.CountryEntity;
+import mdm.engsoft2.mdm.entity.CurrencyEntity;
 
 @Service
 public class CountryService {
-    private final CountryRepository repository;
+    private final CountryRepository countryRepository;
     private final IntegrationService dem;
 
-    public CountryService(CountryRepository repository, IntegrationService dem) {
-        this.repository = repository;
+    public CountryService(CountryRepository countryRepository, IntegrationService dem) {
+        this.countryRepository = countryRepository;
         this.dem = dem;
     }
 
@@ -25,21 +26,24 @@ public class CountryService {
         List<CountryEntity> countriesFromDem = dem.fetchCountriesFromDem();
 
         for (CountryEntity country : countriesFromDem) {
-            if (country.getId() == null) {
-                country.setId(UUID.randomUUID().toString());
+            if (country.getCurrencies() != null) {
+                for (CurrencyEntity currency : country.getCurrencies()) {
+                    currency.setId(UUID.randomUUID().toString());
+                    currency.setCountryId(country.getId());
+                }
             }
         }
 
-        repository.saveAll(countriesFromDem);
+        countryRepository.saveAll(countriesFromDem);
         System.out.println("Synchronization completed. " + countriesFromDem.size() + " countries saved.");
     }
 
     public List<CountryEntity> getAll() {
-        return repository.findAll();
+        return countryRepository.findAll();
     }
 
     public boolean create(CountryEntity c) {
-        List<CountryEntity> countries = repository.findAll();
+        List<CountryEntity> countries = countryRepository.findAll();
         for (int i = 0; i < countries.size(); i++) {
             CountryEntity country = countries.get(i);
             if (country.getCommonName().equals(c.getCommonName())) {
@@ -47,12 +51,24 @@ public class CountryService {
             }
         }
         c.setId(UUID.randomUUID().toString());
-        repository.save(c);
+        c.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+
+        if (c.getCurrencies() != null) {
+            for (CurrencyEntity currency : c.getCurrencies()) {
+                if (currency.getId() == null || currency.getId().isEmpty()) {
+                    currency.setId(UUID.randomUUID().toString());
+                }
+                currency.setCountryId(c.getId());
+            }
+        }
+
+        countryRepository.save(c);
         return true;
     }
     
+    @SuppressWarnings("unchecked")
     public boolean patch(String id, Map<String, Object> updates) {
-        Optional<CountryEntity> oc = repository.findById(id);
+        Optional<CountryEntity> oc = countryRepository.findById(id);
         if (oc.isEmpty()) {
             return false;
         }
@@ -63,7 +79,7 @@ public class CountryService {
                 case "commonName": country.setCommonName((String) value); break;
                 case "independent": country.setIndependent((Boolean) value); break;
                 case "unMember": country.setUnMember((Boolean) value); break;
-                case "currencies": country.setCurrencies((String) value); break;
+                case "currencies": country.setCurrencies((List<CurrencyEntity>) value); break;
                 case "capital": country.setCapital((String) value); break;
                 case "region": country.setRegion((String) value); break;
                 case "languages": country.setLanguages((String) value); break;
@@ -76,17 +92,28 @@ public class CountryService {
                 case "continents": country.setContinents((String) value); break;
             }
         });
-    
-        repository.save(country);
+        
+        country.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+
+        if (country.getCurrencies() != null) {
+            for (CurrencyEntity currency : country.getCurrencies()) {
+                if (currency.getId() == null || currency.getId().isEmpty()) {
+                    currency.setId(UUID.randomUUID().toString());
+                }
+                currency.setCountryId(country.getId());
+            }
+        }
+
+        countryRepository.save(country);
         return true;
     }
 
     public boolean delete(String id) {
-        List<CountryEntity> countries = repository.findAll();
+        List<CountryEntity> countries = countryRepository.findAll();
         for (int i = 0; i < countries.size(); i++) {
             CountryEntity country = countries.get(i);
             if (country.getId().equals(id)) {
-                repository.deleteById(id);
+                countryRepository.deleteById(id);
                 return true;
             }
         }

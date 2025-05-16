@@ -1,5 +1,7 @@
 package mdm.engsoft2.mdm.entity;
 
+import java.sql.Timestamp;
+import java.util.List;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,10 +13,11 @@ public class CountryEntity {
     @Id
     private String id;
     private String commonName;
-    private String officialName;
     private Boolean independent;
     private Boolean unMember;
-    private String currencies;
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "countryId")
+    private List<CurrencyEntity> currencies;
     private String capital;
     private String region;
     private String languages;
@@ -25,4 +28,6 @@ public class CountryEntity {
     private String gini;
     private String timezones;
     private String continents;
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
 }

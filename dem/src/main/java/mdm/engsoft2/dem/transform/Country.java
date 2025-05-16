@@ -1,11 +1,20 @@
 package mdm.engsoft2.dem.transform;
 
+import java.sql.Timestamp;
+import java.util.List;
+import java.util.UUID;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class Country {
-    // Captura apenas o campo "common name"
+    private String id;
     private String commonName;
     private Boolean independent;
     private Boolean unMember;
-    private String currencies;
+    private List<Currency> currencies;
     private String capital;
     private String region;
     private String languages;
@@ -16,10 +25,15 @@ public class Country {
     private String gini;
     private String timezones;
     private String continents;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private Timestamp createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private Timestamp updatedAt;
 
-    public Country(String commonName, Boolean independent, Boolean unMember, String currencies, String capital,
+    public Country(String commonName, Boolean independent, Boolean unMember, List<Currency> currencies, String capital,
                    String region, String languages, String latlng, String borders, Double area, Long population,
                    String gini, String timezones, String continents) {
+        this.id = UUID.randomUUID().toString();
         this.commonName = commonName;
         this.independent = independent;
         this.unMember = unMember;
@@ -34,117 +48,7 @@ public class Country {
         this.gini = gini;
         this.timezones = timezones;
         this.continents = continents;
-    }
-
-    public String getCommonName() {
-        return commonName;
-    }
-
-    public void setCommonName(String commonName) {
-        this.commonName = commonName;
-    }
-
-    public Boolean getIndependent() {
-        return independent;
-    }
-
-    public void setIndependent(Boolean independent) {
-        this.independent = independent;
-    }
-
-    public Boolean getUnMember() {
-        return unMember;
-    }
-
-    public void setUnMember(Boolean unMember) {
-        this.unMember = unMember;
-    }
-
-    public String getCurrencies() {
-        return currencies;
-    }
-
-    public void setCurrencies(String currencies) {
-        this.currencies = currencies;
-    }
-
-    public String getCapital() {
-        return capital;
-    }
-
-    public void setCapital(String capital) {
-        this.capital = capital;
-    }
-
-    public String getRegion() {
-        return region;
-    }
-
-    public void setRegion(String region) {
-        this.region = region;
-    }
-
-    public String getLanguages() {
-        return languages;
-    }
-
-    public void setLanguages(String languages) {
-        this.languages = languages;
-    }
-
-    public String getLatlng() {
-        return latlng;
-    }
-
-    public void setLatlng(String latlng) {
-        this.latlng = latlng;
-    }
-
-    public String getBorders() {
-        return borders;
-    }
-
-    public void setBorders(String borders) {
-        this.borders = borders;
-    }
-
-    public Double getArea() {
-        return area;
-    }
-
-    public void setArea(Double area) {
-        this.area = area;
-    }
-
-    public Long getPopulation() {
-        return population;
-    }
-
-    public void setPopulation(Long population) {
-        this.population = population;
-    }
-
-    public String getGini() {
-        return gini;
-    }
-
-    public void setGini(String gini) {
-        this.gini = gini;
-    }
-
-    public String getTimezones() {
-        return timezones;
-    }
-
-    public void setTimezones(String timezones) {
-        this.timezones = timezones;
-    }
-
-    public String getContinents() {
-        return continents;
-    }
-
-    public void setContinents(String continents) {
-        this.continents = continents;
+        this.createdAt = new Timestamp(System.currentTimeMillis());
+        this.updatedAt = null;
     }
 }
