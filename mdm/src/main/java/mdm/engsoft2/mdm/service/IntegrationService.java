@@ -19,7 +19,7 @@ public class IntegrationService {
 
     public List<CountryEntity> fetchCountriesFromDem() {
         try {
-            String url = "http://dem:8080/bronze/countries";
+            String url = "http://dem:8080/dem/countries";
             CountryEntity[] countriesArray = restTemplate.getForObject(url, CountryEntity[].class);
             return Arrays.stream(countriesArray).collect(Collectors.toList());
         } catch (ResourceAccessException e) {

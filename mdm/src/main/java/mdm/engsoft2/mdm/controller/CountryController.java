@@ -3,27 +3,21 @@ package mdm.engsoft2.mdm.controller;
 import mdm.engsoft2.mdm.entity.CountryEntity;
 import mdm.engsoft2.mdm.repository.CountryRepository;
 import mdm.engsoft2.mdm.service.CountryService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/countries")
+@RequestMapping("/mdm/countries")
 public class CountryController {
 
     private final CountryService service;
     private final CountryRepository repository;
 
-    @Autowired
     public CountryController(CountryService service, CountryRepository repository) {
         this.service = service;
         this.repository = repository;
-    }
-
-    @PostMapping("/create")
-    public CountryEntity create(@RequestBody CountryEntity country) {
-        return service.create(country);
     }
 
     @GetMapping("/all")
@@ -60,12 +54,25 @@ public class CountryController {
                 .toList();
     }
 
-    @PutMapping("/{id}")
-    public CountryEntity update(@PathVariable String id, @RequestBody CountryEntity country) {
-        return service.update(id, country);
+    @GetMapping("/borders/{border}")
+    public List<CountryEntity> getByBorders(@PathVariable String border) {
+        return repository.findAll()
+                .stream()
+                .filter(c -> c.getBorders() != null && c.getBorders().contains(border))
+                .toList();
     }
 
-    @DeleteMapping("/{id}")
+    @PostMapping("/create")
+    public boolean create(@RequestBody CountryEntity country) {
+        return service.create(country);
+    }
+
+    @PatchMapping("/update/{id}")
+    public boolean update(@PathVariable String id, @RequestBody Map<String, Object> updates) {
+        return service.patch(id, updates);
+    }
+
+    @DeleteMapping("/delete/{id}")
     public void delete(@PathVariable String id) {
         service.delete(id);
     }

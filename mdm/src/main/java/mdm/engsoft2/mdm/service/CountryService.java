@@ -1,6 +1,8 @@
 package mdm.engsoft2.mdm.service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
@@ -32,34 +34,62 @@ public class CountryService {
         System.out.println("Synchronization completed. " + countriesFromDem.size() + " countries saved.");
     }
 
-    public CountryEntity create(CountryEntity country) {
-        validate(country);
-        country.setId(UUID.randomUUID().toString());
-        return repository.save(country);
-    }
-
     public List<CountryEntity> getAll() {
         return repository.findAll();
     }
 
-    public CountryEntity update(String id, CountryEntity countryUpdated){
-        validate(countryUpdated);
-        countryUpdated.setCommonName(id);
-        return repository.save(countryUpdated);
+    public boolean create(CountryEntity c) {
+        List<CountryEntity> countries = repository.findAll();
+        for (int i = 0; i < countries.size(); i++) {
+            CountryEntity country = countries.get(i);
+            if (country.getCommonName().equals(c.getCommonName())) {
+                return false;
+            }
+        }
+        c.setId(UUID.randomUUID().toString());
+        repository.save(c);
+        return true;
+    }
+    
+    public boolean patch(String id, Map<String, Object> updates) {
+        Optional<CountryEntity> oc = repository.findById(id);
+        if (oc.isEmpty()) {
+            return false;
+        }
+        CountryEntity country = oc.get();
+    
+        updates.forEach((key, value) -> {
+            switch (key) {
+                case "commonName": country.setCommonName((String) value); break;
+                case "independent": country.setIndependent((Boolean) value); break;
+                case "unMember": country.setUnMember((Boolean) value); break;
+                case "currencies": country.setCurrencies((String) value); break;
+                case "capital": country.setCapital((String) value); break;
+                case "region": country.setRegion((String) value); break;
+                case "languages": country.setLanguages((String) value); break;
+                case "latlng": country.setLatlng((String) value); break;
+                case "borders": country.setBorders((String) value); break;
+                case "area": country.setArea(value instanceof Number ? ((Number) value).doubleValue() : null); break;
+                case "population": country.setPopulation(value instanceof Number ? ((Number) value).longValue() : null); break;
+                case "gini": country.setGini((String) value); break;
+                case "timezones": country.setTimezones((String) value); break;
+                case "continents": country.setContinents((String) value); break;
+            }
+        });
+    
+        repository.save(country);
+        return true;
     }
 
-    public void delete(String id) {
-        repository.deleteById(id);
-    }
-
-    private void validate(CountryEntity country){
-        if (country.getCommonName() == null || country.getCommonName().isBlank()){
-            throw new IllegalArgumentException("Common name é obrigatório");
+    public boolean delete(String id) {
+        List<CountryEntity> countries = repository.findAll();
+        for (int i = 0; i < countries.size(); i++) {
+            CountryEntity country = countries.get(i);
+            if (country.getId().equals(id)) {
+                repository.deleteById(id);
+                return true;
+            }
         }
-        
-        if (country.getOfficialName() == null || country.getOfficialName().isBlank()){
-            throw new IllegalArgumentException("Official name é obrigatório");
-        }
-        //aqui se quiserem, podemos validar o resto dos atributos
+        return false;
     }
 }

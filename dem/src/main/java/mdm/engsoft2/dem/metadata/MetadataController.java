@@ -1,7 +1,6 @@
 package mdm.engsoft2.dem.metadata;
 
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +12,6 @@ public class MetadataController {
 
     private final MetadataRepository repository;
 
-    @Autowired
     public MetadataController(MetadataRepository repository) {
         this.repository = repository;
     }
