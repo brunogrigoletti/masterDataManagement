@@ -1,0 +1,180 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper, total={6in, 9in}]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{csquotes}
+\usepackage{lipsum}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{seqsplit}
+
+\renewcommand{\figurename}{Figura}
+\hypersetup{colorlinks=true, urlcolor=blue}
+
+\tcbuselibrary{listingsutf8}
+\newtcblisting{terminal}{
+    listing only,
+    listing options={
+        basicstyle=\ttfamily\color{white}\small,
+        backgroundcolor=\color{black},
+        keywordstyle=\color{cyan},
+        commentstyle=\color{green},
+        identifierstyle=\color{white},
+        language=bash,
+        breaklines=true,
+        showstringspaces=false,
+        numbers=none,
+        deletekeywords={do},
+    },
+    colframe=black,
+    colback=black,
+    sharp corners,
+    boxsep=1mm,
+    left=2mm,
+    right=2mm,
+    top=1mm,
+    bottom=1mm,
+}
+
+\lstdefinestyle{vscode}{
+    language=Python,
+    extendedchars=true,
+    inputencoding=ansinew,
+    tabsize=4,
+    showstringspaces=false,
+    numbers=left,
+    firstnumber=1,
+    commentstyle=\color{gray},        
+    keywordstyle=\color{blue},        
+    stringstyle=\color{orange},
+    rulecolor=\color{black},
+    basicstyle=\small\ttfamily,
+    breaklines=true,
+    numberstyle=\tiny,
+    aboveskip=1em,
+    belowskip=1em,
+}
+
+\lstdefinestyle{json}{
+    belowcaptionskip=1\baselineskip,
+    breaklines=true,
+    frame=false,
+    xleftmargin=\parindent,
+    language=Java,
+    showstringspaces=false,
+    basicstyle=\footnotesize\ttfamily,
+    keywordstyle=\bfseries\color{green!40!black},
+    commentstyle=\itshape\color{purple!40!black},
+    stringstyle=\color{orange},
+    numbers=left,
+    numbersep=5pt,
+    numberstyle=\tiny\color{gray},
+    backgroundcolor=\color{gray!10},
+    tabsize=2
+}
+
+\graphicspath{{./images/}}
+
+\title{\textbf{Sistema Extensível de Gestão de Dados Mestres}}
+\date{Engenharia de Software II}
+\author{Bruno Laitano, Daniel Lee e Pedro Ulisses}
+
+\begin{document}
+
+\maketitle
+
+\section{Introdução}
+Com uma arquitetura de integração eficiente, extensível e flexível, desenvolvemos um sistema \emph{Master Data Management} capaz de consolidar, padronizar e garantir a qualidade e a governança de dados mestres provenientes da API pública \href{https://restcountries.com/v3.1/all}{\emph{REST Countries}}, com dezenas de dados geográficos a respeito de 450 países do globo.
+
+\quad Para tanto, idealizamos dois serviços distintos: o \emph{Master Data Management} (MDM) e o \emph{Data Extraction Management} (DEM). O MDM é responsável por armazenar, validar e padronizar os dados mestres. Ele provê uma API \emph{RESTful} própria que permite operações administrativas sobre os registros, possibilitando a criação de novos dados, a recuperação de informações com base em critérios específicos, a atualização de registros existentes e a exclusão de dados obsoletos ou redundantes, mantendo um repositório central confiável e estruturado.
+
+\quad Por outro lado, o DEM tem como função principal executar operações de ETL (Extração, Transformação e Carga) a partir da API \emph{REST Countries}. Esse serviço realiza a extração dos dados geográficos, aplica transformações para padronizar as informações conforme critérios pré-definidos e, em seguida, carrega os dados transformados em um arquivo \texttt{.json}. Além disso, disponibiliza APIs \emph{RESTful} próprias que permitem não apenas monitorar as transações realizadas, mas também expondo ao outro serviço a nova coleção de dados baseada na original.
+
+\quad Do ponto de vista arquitetural, utilizamos H2 e JPA para estruturar o nosso projeto. O H2 é um banco de dados relacional capaz de facilitar a configuração e o \emph{reset} do ambiente a cada execução. Já o JPA é uma especificação para mapeamento objeto-relacional, permitindo que entidades Java sejam persistidas e consultadas no banco de dados, sem a necessidade de escrever comando SQL manualmente.
+
+\section{\emph{Data Extraction Management}}
+O serviço extrator é baseado na extração dos dados "crus" (\texttt{raw}) da API \emph{REST Countries}, na transformação desses dados em uma nova coleção, com menos atributos, e no registro local dos dados curados (\texttt{bronze}). Além disso, um segmento específico do serviço é dedicado a preparar metadados a respeito das informações coletadas durante a extração.
+
+\subsection{ETL: \emph{Extract, Transform, Load}}
+A leitura da API pública é realizada com \texttt{RestTemplate}, que fornece dezenas de operações abrangendo todos os parâmetros de requisição HTTP. Essa estrutura é especialmente utilizada no contexto de uma classe \texttt{ExtractService}.
+
+\quad O serviço de extração, além de consumir a API, registra uma cópia local em formato \texttt{.json} dos dados geográficos coletados. Isso é realizado por meio de uma operação \texttt{saveRaw()}, que nomeia cada arquivo coletado a partir do tempo e da data de extração, garantindo que os registros locais possam ser mapeados em função do momento em que foram extraídos.
+
+\quad Uma vez extraídos, os dados "crus" são transformados com base em atributos previamente selecionados. A transformação se dá sobre duas entidades: \texttt{Country} e \texttt{Currency}, sendo esta última uma propriedade específica da primeira. Do ponto de vista do banco de dados, ambas estão interrelacionadas por meio de um par chave primária (\texttt{PK})/chave estrangeira (\texttt{FK}).
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{assets/Diagram.png}
+\caption{Esquema original na requisição do projeto}
+\end{figure}
+
+\quad Foram adicionados ao esquema de \texttt{Country} novos atributos em relação à proposta original. Abaixo, você poderá ver, no contexto da classe/entidade dedicada à figura do país, quais foram as propriedades incluídas no design. Os atributos de \texttt{Currency} foram mantidos como o exigido no esquema original. Além disso, atribuímos a cada objeto um identificador único utilizando a classe \texttt{UUID}.
+
+\begin{lstlisting}[style=vscode]
+public class Country {
+    private String id;
+    private String commonName;
+    private Boolean independent;
+    private Boolean unMember;
+    private List<Currency> currencies;
+    private String capital;
+    private String region;
+    private String languages;
+    private String latlng;
+    private String borders;
+    private Double area;
+    private Long population;
+    private String gini;
+    private String timezones;
+    private String continents;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private Timestamp createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private Timestamp updatedAt;
+}
+\end{lstlisting}
+
+\quad As informações curadas são salvas localmente em um arquivo no formato \texttt{.json}, também nomeado a partir do momento do registro, por meio de uma operação \texttt{saveBronze()}. Os arquivos curados são classificados como \texttt{bronze}. A ideia de nomeá-los de tal forma deve-se ao fato de que, na hipótese de novos refatoramentos das informações a serem coletadas, os dados podem ser transformados de forma cada vez mais precisa.
+
+\quad Finalmente, um \texttt{DemController} expõe uma nova API ao outro serviço que compõe este projeto, garantindo que os daos transformados também possam ser acessados livremente. Abaixo, indicamos a função do tipo \texttt{@GetMapping} responsável por publicizar essas informações.
+
+\begin{lstlisting}[style=vscode]
+@GetMapping("")
+    public ResponseEntity<String> getCountries() {
+        String bronzeData = data.getBronzeData();
+        if (bronzeData == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"error\":\"No bronze data available.\"}");
+        }
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(bronzeData);
+    }
+\end{lstlisting}
+
+\subsection{Metadados}
+Os metadados a respeito de cada extração são salvos com base em três parâmetros: o nome da fonte (\texttt{provider}), a quantidade de elementos salvos (\texttt{count}) e a última atualização recebida (\texttt{lastUpdate}). Criamos tanto um repositório quanto um controlador para que os metadados possam ser registrados localmente e expostos em um novo \emph{endpoint}.
+
+\quad A título de exemplo, realizada uma extração, é este o tipo de resultado que poderá ser conferido pelo administrador:
+
+\begin{lstlisting}[style=json]
+[
+    {
+        "provider": "RestCountries API",
+        "count": 250,
+        "lastUpdate": "2025-05-25_12-19-10"
+    }
+]
+\end{lstlisting}
+
+\section{\emph{Master Data Management}}
+
+\end{document}
