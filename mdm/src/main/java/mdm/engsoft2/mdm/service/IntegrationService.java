@@ -18,14 +18,27 @@ public class IntegrationService {
     }
 
     public List<CountryEntity> fetchCountriesFromDem() {
-        try {
-            //String url = "http://dem:8080/dem/countries";
-            String url = "http://localhost:8080/dem/countries";
-            CountryEntity[] countriesArray = restTemplate.getForObject(url, CountryEntity[].class);
-            return Arrays.stream(countriesArray).collect(Collectors.toList());
-        } catch (ResourceAccessException e) {
-            System.err.println("Error fetching countries: " + e.getMessage());
-            return List.of();
+        int maxAttempts = 10;
+        int delayMs = 3000;
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                String url = "http://dem:8080/dem/countries";
+                CountryEntity[] countriesArray = restTemplate.getForObject(url, CountryEntity[].class);
+                return Arrays.stream(countriesArray).collect(Collectors.toList());
+            } catch (ResourceAccessException e) {
+                System.err.println("Attempt " + attempt + " failed: " + e.getMessage());
+                if (attempt == maxAttempts) {
+                    System.err.println("Could not connect to DEM after " + maxAttempts + " attempts.");
+                    return List.of();
+                }
+                try {
+                    Thread.sleep(delayMs);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    return List.of();
+                }
+            }
         }
+        return List.of();
     }
 }

@@ -9,7 +9,10 @@
 \usepackage{lipsum}
 \usepackage{enumitem}
 \usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{adjustbox}
 \usepackage{listings}
+\usepackage{caption}
 \usepackage{hyperref}
 \usepackage{listings}
 \usepackage{tcolorbox}
@@ -44,7 +47,7 @@
 }
 
 \lstdefinestyle{vscode}{
-    language=Python,
+    language=Java,
     extendedchars=true,
     inputencoding=ansinew,
     tabsize=4,
@@ -84,14 +87,14 @@
 
 \title{\textbf{Sistema Extensível de Gestão de Dados Mestres}}
 \date{Engenharia de Software II}
-\author{Bruno Laitano, Daniel Lee e Pedro Ulisses}
+\author{Bruno Laitano, Daniel Lee e Pedro Dorneles}
 
 \begin{document}
 
 \maketitle
 
 \section{Introdução}
-Com uma arquitetura de integração eficiente, extensível e flexível, desenvolvemos um sistema \emph{Master Data Management} capaz de consolidar, padronizar e garantir a qualidade e a governança de dados mestres provenientes da API pública \href{https://restcountries.com/v3.1/all}{\emph{REST Countries}}, com dezenas de dados geográficos a respeito de 450 países do globo.
+Com uma arquitetura de integração eficiente, extensível e flexível, desenvolvemos um sistema \emph{Master Data Management} capaz de consolidar, padronizar e garantir a qualidade e a governança de dados mestres provenientes da API pública \href{https://restcountries.com/v3.1/all}{\emph{REST Countries}}, com dezenas de dados geográficos a respeito de 250 países do globo.
 
 \quad Para tanto, idealizamos dois serviços distintos: o \emph{Master Data Management} (MDM) e o \emph{Data Extraction Management} (DEM). O MDM é responsável por armazenar, validar e padronizar os dados mestres. Ele provê uma API \emph{RESTful} própria que permite operações administrativas sobre os registros, possibilitando a criação de novos dados, a recuperação de informações com base em critérios específicos, a atualização de registros existentes e a exclusão de dados obsoletos ou redundantes, mantendo um repositório central confiável e estruturado.
 
@@ -141,9 +144,9 @@ public class Country {
 }
 \end{lstlisting}
 
-\quad As informações curadas são salvas localmente em um arquivo no formato \texttt{.json}, também nomeado a partir do momento do registro, por meio de uma operação \texttt{saveBronze()}. Os arquivos curados são classificados como \texttt{bronze}. A ideia de nomeá-los de tal forma deve-se ao fato de que, na hipótese de novos refatoramentos das informações a serem coletadas, os dados podem ser transformados de forma cada vez mais precisa.
+\quad As informações curadas são salvas localmente em um arquivo no formato \texttt{.json}, também nomeado a partir do momento do registro, por meio de uma operação \texttt{saveBronze()}. Os arquivos curados são classificados como \texttt{bronze}. A ideia de nomeá-los de tal forma deve-se ao fato de que, na hipótese de novos refatoramentos das informações a serem coletadas, os dados podem ser transformados de forma cada vez mais precisa (\texttt{silver}, \texttt{gold}...).
 
-\quad Finalmente, um \texttt{DemController} expõe uma nova API ao outro serviço que compõe este projeto, garantindo que os daos transformados também possam ser acessados livremente. Abaixo, indicamos a função do tipo \texttt{@GetMapping} responsável por publicizar essas informações.
+\quad Finalmente, um \texttt{DemController} expõe uma nova API ao outro serviço que compõe este projeto, garantindo que os dados transformados também possam ser acessados livremente. Abaixo, indicamos a função do tipo \texttt{@GetMapping} responsável por publicizar essas informações.
 
 \begin{lstlisting}[style=vscode]
 @GetMapping("")
@@ -176,5 +179,182 @@ Os metadados a respeito de cada extração são salvos com base em três parâme
 \end{lstlisting}
 
 \section{\emph{Master Data Management}}
+O módulo MDM foi desenvolvido com o objetivo de gerenciar dados mestres relacionados a países e moedas, proporcionando operações de criação, consulta, atualização e remoção através de uma API \emph{RESTful} implementada com \emph{Spring Boot}. A seguir, são descritas as principais classes que compõem esse módulo.
+
+\subsection{\texttt{CountryController}}
+O \texttt{CountryController} provê a API \emph{RESTful} para o gerenciamento das entidades de país (\texttt{CountryEntity}), cumprindo diretamente os requisitos de criação, consulta, atualização e remoção definidos na especificação do microserviço MDM.
+
+\begin{table}[H]
+\centering
+\caption{Endpoints da classe \texttt{CountryController}}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{@{} l c p{8cm} @{}}
+\toprule
+\textbf{Endpoint} & \textbf{Método HTTP} & \textbf{Descrição} \\
+\midrule
+\texttt{/mdm/countries/all} & GET & Retorna a lista completa de países cadastrados, via \texttt{CountryService.getAll()} \\
+\texttt{/mdm/countries/id/\{id\}} & GET & Busca país por identificador UUID, retornando \texttt{200 OK} ou \texttt{404 Not Found} \\
+\texttt{/mdm/countries/name/\{name\}} & GET & Busca país pelo nome comum (\texttt{commonName}), retornando \texttt{200 OK} ou \texttt{404 Not Found} \\
+\texttt{/mdm/countries/capital/\{capital\}} & GET & Busca país pela capital \\
+\texttt{/mdm/countries/region/\{region\}} & GET & Filtra países por região \\
+\texttt{/mdm/countries/borders/\{border\}} & GET & Retorna todos os países que fazem fronteira com o código ISO especificado \\
+\texttt{/mdm/countries/create} & POST & Cria um novo registro de país, recebendo JSON com todos os atributos de \texttt{CountryEntity} \\
+\texttt{/mdm/countries/update/\{id\}} & PATCH & Atualiza parcialmente um país existente, através de um \texttt{Map<String,Object>} de campos \\
+\texttt{/mdm/countries/delete/\{id\}} & DELETE & Remove o país identificado por \texttt{id} \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\subsubsection{Detalhes de implementação}
+\begin{itemize}
+    \item \textbf{Injeção de dependências}: o controlador recebe via construtor o \texttt{CountryService}, responsável pela lógica de negócio, e o \texttt{CountryRepository}, que executa operações de persistência;
+    
+    \item \textbf{Tratamento de respostas}: métodos que retornam um \texttt{Optional} são encapsulados com \texttt{ResponseEntity}, garantindo retornos apropriados como \texttt{200 OK} ou \texttt{404 Not Found};
+    
+    \item \textbf{Consultas personalizadas}: filtros por região e fronteiras são implementados utilizando \texttt{Stream API} sobre a lista completa de países.
+\end{itemize}
+
+\subsubsection{Exemplo de \emph{payload} para a criação de um novo país}
+\texttt{POST /mdm/countries/create}
+
+\begin{lstlisting}[style=json]
+{
+  "id": "b3f5c8e2-9f1e-4a7a-8d8f-2a4e5c6d7b8c",
+  "commonName": "Brazil",
+  "independent": true,
+  "unMember": true,
+  "currencies": [
+    {
+      "id": "e2f1a9d8-3b4c-5e6f-7a8b-9c0d1e2f3a4b",
+      "currencyCode": "BRL",
+      "name": "Brazilian real",
+      "symbol": "R$"
+    }
+  ],
+  "capital": "Brasilia",
+  "region": "Americas",
+  "languages": "Portuguese",
+  "latlng": "[-15.793889, -47.882778]",
+  "borders": ["ARG","BOL","COL","GUF","GUY","PRY","PER","SUR","URY","VEN"],
+  "area": 8515767.0,
+  "population": 212559409,
+  "gini": "53.4",
+  "timezones": ["UTC-05:00","UTC-04:00","UTC-03:00"],
+  "continents": ["South America"]
+}
+\end{lstlisting}
+
+\subsubsection{Exemplo de \emph{payload} para atualização parcial}
+\texttt{PATCH /mdm/countries/update/b3f5c8e2-9f1e-4a7a-8d8f-2a4e5c6d7b8c}
+
+\begin{lstlisting}[style=json]
+{
+  "population": 213000000,
+  "gini": "54.7"
+}
+\end{lstlisting}
+
+\subsection{\texttt{CurrencyController}}
+O \texttt{CurrencyController} fornece a API \emph{RESTful} para o gerenciamento de moedas (\texttt{CurrencyEntity}), completando o escopo de domínio financeiro do MDM.
+
+\begin{table}[H]
+\centering
+\caption{Endpoints da classe \texttt{CurrencyController}}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{@{} l c p{8cm} @{}}
+\toprule
+\textbf{Endpoint} & \textbf{Método HTTP} & \textbf{Descrição} \\
+\midrule
+\texttt{/mdm/currencies/all} & GET & Lista todas as moedas disponíveis no repositório \\
+\texttt{/mdm/currencies/id/\{id\}} & GET & Retorna moeda por UUID, com \texttt{200 OK} ou \texttt{404 Not Found} \\
+\texttt{/mdm/currencies/code/\{code\}} & GET & Busca moeda pelo código ISO (e.g. \texttt{"USD"}), retornando um \texttt{Optional<CurrencyEntity>} \\
+\texttt{/mdm/currencies/create} & POST & Cria uma nova moeda, recebendo JSON com atributos de \texttt{CurrencyEntity} \\
+\texttt{/mdm/currencies/update/\{id\}} & PATCH & Atualiza parcialmente uma moeda existente \\
+\texttt{/mdm/currencies/delete/\{id\}} & DELETE & Remove a moeda pelo identificador \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\subsubsection{Detalhes de implementação}
+\begin{itemize}
+    \item \textbf{Consultas}: busca por código de moeda (\texttt{getByCode}) retornando \texttt{Optional}, permitindo tratamento seguro de resultados;
+    
+    \item \textbf{Responsabilidade}: validação de formatos (ISO 4217) e regras de negócio são realizadas na camada de serviço (\texttt{CurrencyService});
+    
+    \item \textbf{Padrão \emph{RESTful}}: todos os métodos seguem boas práticas REST, garantindo consistência com demais serviços.
+\end{itemize}
+
+\subsubsection{Exemplo de \emph{payload} para criação de uma nova \emph{currency}}
+\texttt{POST /mdm/currencies/create}
+
+\begin{lstlisting}[style=json]
+{
+    "currencyCode": "FCR",
+    "currencyName": "Fictional currency",
+    "currencySymbol": "Fcr"
+}
+\end{lstlisting}
+
+\section{Integração entre DEM e MDM}
+A forma como definimos a integração entre ambos os serviços implementados envolve dois segmentos criados no contexto de MDM. Em \texttt{CountryService}, um método com a anotação \texttt{@PostConstruct}, sendo executado logo após a conclusão da injeção de dependências, é responsável por permitir o acesso de MDM aos dados transformados (\texttt{bronze}) em DEM. O método foi chamado de \texttt{syncWithDem()}.
+
+\quad A razão pela qual optamos por permitir ao MDM acessar os dados transformados é que, dessa forma, as operações \texttt{CRUD} poderiam ser realizadas sobre essas informações, facilitando os testes realizados e garantindo a integridade das operações. Essas operações também são implementadas no contexto da classe \texttt{CountryService}.
+
+\quad A classe \texttt{IntegrationService} foi criada justamente com o intuito de implementar o método \texttt{fetchCountriesFromDem()}, que consome o \emph{endpoint} exposto pelo serviço extrator, por meio do qual a coleção de dados transformados pode ser acessada.
+
+\begin{lstlisting}[style=vscode]
+public List<CountryEntity> fetchCountriesFromDem() {
+        int maxAttempts = 10;
+        int delayMs = 3000;
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                String url = "http://dem:8080/dem/countries";
+                CountryEntity[] countriesArray = restTemplate.getForObject(url, CountryEntity[].class);
+                return Arrays.stream(countriesArray).collect(Collectors.toList());
+            } catch (ResourceAccessException e) {
+                System.err.println("Attempt " + attempt + " failed: " + e.getMessage());
+                if (attempt == maxAttempts) {
+                    System.err.println("Could not connect to DEM after " + maxAttempts + " attempts.");
+                    return List.of();
+                }
+                try {
+                    Thread.sleep(delayMs);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    return List.of();
+                }
+            }
+        }
+        return List.of();
+    }
+\end{lstlisting}
+
+\section{Uso da plataforma \emph{Docker}}
+O uso do \emph{Docker} neste projeto proporcionou um ambiente padronizado para a execução dos serviços, facilitando tanto o desenvolvimento quanto o \emph{deploy}. Tanto o \emph{Data Extraction Management} quanto o \emph{Master Data Management} possuem os seus próprios arquivos \texttt{Dockerfile}, que definem todas as instruções necessárias para construir a imagem de cada serviço.
+
+\quad Além disso, a utilização de um arquivo \texttt{docker-compose} permite orquestrar de forma otimizada a execução conjunta dos serviços. Com um único arquivo de configuração, é possível definir como os \emph{containers} do DEM e do MDM devem ser construídos, conectados e inicializados. Dessa forma, a implantação do sistema é mais simples, bastando um único comando para subir toda a infraestrutura necessária para o funcionamento do sistema.
+
+\begin{lstlisting}[style=vscode]
+services:
+    dem:
+      build:
+        context: ./dem
+        dockerfile: dockerfile
+      volumes:
+        - ./files:/dem/files
+      ports:
+        - 8081:8080
+    
+    mdm:
+      build:
+        context: ./mdm
+        dockerfile: dockerfile
+      depends_on:
+        - dem
+      ports:
+        - 8082:8082
+\end{lstlisting}
 
 \end{document}

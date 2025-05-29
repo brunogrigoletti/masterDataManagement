@@ -3,6 +3,8 @@ services:
       build:
         context: ./dem
         dockerfile: dockerfile
+      volumes:
+        - ./files:/dem/files
       ports:
         - 8081:8080
     
